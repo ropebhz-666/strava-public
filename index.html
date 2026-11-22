@@ -74,19 +74,41 @@
   .wk i{flex:1;background:var(--acc);border-radius:2px 2px 0 0;min-height:2px}
   .wklbl{display:flex;justify-content:space-between;color:var(--mut);font-size:.72rem;margin-top:4px}
   .empty{padding:40px;text-align:center;color:var(--mut)}
+  .hd nav a{cursor:pointer}
+  .wide{max-width:1000px;margin:24px auto;padding:0 20px}
+  .wide h1{font-size:1.8rem;font-weight:500;margin-bottom:18px}
+  .wide .box{padding:20px;margin-bottom:20px}
+  .wide h3{font-size:1.15rem;font-weight:500;margin-bottom:12px}
+  .bars{display:flex;align-items:flex-end;gap:4px;height:160px}
+  .bars div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:.62rem;color:var(--mut)}
+  .bars i{width:100%;background:var(--acc);border-radius:2px 2px 0 0;min-height:2px}
+  table{width:100%;border-collapse:collapse}th,td{text-align:right;padding:9px 6px;border-bottom:1px solid #eeeef3}
+  th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-weight:500;font-size:.85rem}
+  .heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);gap:3px;overflow-x:auto;padding-bottom:6px}
+  .heat i{width:13px;height:13px;border-radius:2px;background:#ebedf0}
+  .routes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .routes .map{height:150px}.routes small{display:block;color:var(--mut);margin-top:6px}
+  .prog{height:14px;background:#ececf2;border-radius:99px;overflow:hidden;margin:8px 0}
+  .prog i{display:block;height:100%;background:var(--acc)}
+  .goal{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+  .goal input{border:1px solid #8d8d9a;border-radius:4px;padding:8px;width:110px;font:inherit}
+  .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .badge{border:1px solid var(--line);border-radius:8px;padding:14px;text-align:center}
+  .badge.off{opacity:.4;filter:grayscale(1)}.badge b{display:block;font-size:1.6rem}.badge small{color:var(--mut)}
   @media(max-width:1000px){.layout{grid-template-columns:1fr}.hd nav{display:none}}
 </style>
 </head>
 <body>
 <header><div class="hd">
   <div class="brand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.4 17.9 12.9 13H9.5L15.4 24l5.9-11h-3.5zM10.5 0 3.7 13.2h4l2.8-5.4 2.7 5.4h4z"/></svg>PAINEL</div>
-  <nav><a class="on">Painel</a><a>Treinamento</a><a>Mapas</a><a>Desafios</a></nav>
+  <nav id="nav"><a href="#painel" data-v="painel">Painel</a><a href="#treinamento" data-v="treinamento">Treinamento</a><a href="#mapas" data-v="mapas">Mapas</a><a href="#desafios" data-v="desafios">Desafios</a></nav>
   <div class="spacer"></div>
   <button class="btn-o" onclick="location.reload()">Atualizar</button>
   <div class="plus">+</div>
 </div></header>
 
-<div class="layout">
+<div class="wide" id="view2" style="display:none"></div>
+<div class="layout" id="view-painel">
   <aside>
     <div class="box profile">
       <div class="avatar">🚴</div>
@@ -191,8 +213,60 @@ function profile(){
 }
 $('more').onclick=()=>{shown+=8;render()};
 $('period').onchange=e=>{period=e.target.value;shown=8;render()};
+/* ---------- navegação ---------- */
+const isBike=a=>/Ride/.test(sp(a));
+const ym=a=>a.start_date_local.slice(0,7);
+const sumKm=l=>l.reduce((s,a)=>s+a.distance,0)/1000;
+function viewTreino(){
+  const m={};ALL.forEach(a=>m[ym(a)]=(m[ym(a)]||0)+a.distance/1000);
+  const keys=[];for(let i=23;i>=0;i--){const t=new Date(today.getFullYear(),today.getMonth()-i,1);keys.push(t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0'))}
+  const mx=Math.max(1,...keys.map(k=>m[k]||0));
+  const years={};ALL.forEach(a=>{const y=a.start_date_local.slice(0,4);(years[y]=years[y]||[]).push(a)});
+  const rows=Object.keys(years).sort().reverse().map(y=>{const l=years[y],km=sumKm(l),t=l.reduce((s,a)=>s+a.moving_time,0),el=l.reduce((s,a)=>s+a.total_elevation_gain,0);
+    const weeks=y==today.getFullYear()?Math.max(1,(today-new Date(y+'-01-01'))/6048e5):52;
+    return `<tr><td>${y}</td><td>${fmt(l.length)}</td><td>${fmt(km)} km</td><td>${fmt(km/weeks)} km</td><td>${fmt(t/3600)} h</td><td>${fmt(el)} m</td></tr>`}).join('');
+  const bySport={};ALL.forEach(a=>bySport[sp(a)]=(bySport[sp(a)]||0)+a.distance/1000);
+  return `<h1>Treinamento</h1>
+  <div class="box"><h3>Km por mês (24 meses)</h3><div class="bars">${keys.map(k=>`<div title="${k}: ${fmt(m[k]||0)} km"><i style="height:${(m[k]||0)/mx*88}%"></i>${k.slice(5)}</div>`).join('')}</div></div>
+  <div class="box"><h3>Por ano</h3><table><tr><th>Ano</th><th>Atividades</th><th>Distância</th><th>Média/semana</th><th>Tempo</th><th>Elevação</th></tr>${rows}</table></div>
+  <div class="box"><h3>Por esporte</h3><table>${Object.entries(bySport).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${ICON[k]||''} ${NAME[k]||k}</td><td>${fmt(v)} km</td></tr>`).join('')}</table></div>`;
+}
+function viewMapas(){
+  const withMap=ALL.filter(a=>a.map&&a.map.summary_polyline).slice(0,24);
+  if(withMap.length)return `<h1>Mapas</h1><div class="box"><h3>Rotas recentes</h3><div class="routes">${withMap.map(a=>`<div><div class="map">${mapSVG(a.map.summary_polyline)}</div><small>${dateBR(a.start_date_local)} · ${fmt(a.distance/1000,1)} km</small></div>`).join('')}</div></div>`;
+  const days={};ALL.forEach(a=>{const d=a.start_date_local.slice(0,10);days[d]=(days[d]||0)+a.distance/1000});
+  const end=new Date(today);end.setHours(12);const start=new Date(end);start.setDate(start.getDate()-52*7-((end.getDay()+6)%7));
+  let cells='';for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){const k=d.toISOString().slice(0,10),v=days[k]||0;
+    const c=!v?'#ebedf0':v<20?'#fdd0bd':v<50?'#fd9a6f':v<100?'#fc6a2e':'#c93a00';cells+=`<i style="background:${c}" title="${k}: ${fmt(v)} km"></i>`}
+  return `<h1>Mapas</h1><div class="box"><h3>Calendário de atividade (12 meses)</h3><div class="heat">${cells}</div><p style="color:var(--mut);font-size:.85rem;margin-top:10px">Por privacidade, esta versão pública não exibe rotas. Na versão privada, esta aba mostra os mapas dos seus percursos.</p></div>`;
+}
+function load(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
+function viewDesafios(){
+  const mg=+load('goalM',600),yg=+load('goalY',7000);
+  const cm=today.toISOString().slice(0,7),cy=String(today.getFullYear());
+  const km=sumKm(ALL.filter(a=>ym(a)===cm)),ky=sumKm(ALL.filter(a=>a.start_date_local.startsWith(cy)));
+  const pm={};ALL.forEach(a=>pm[ym(a)]=(pm[ym(a)]||0)+a.distance/1000);
+  const best=Math.max(0,...Object.values(pm));
+  const longest=Math.max(0,...ALL.map(a=>a.distance/1000)),climb=Math.max(0,...ALL.map(a=>a.total_elevation_gain));
+  const tot=sumKm(ALL);
+  const B=[['🏁','Primeiros 1.000 km',tot>=1e3],['🌍','10.000 km no total',tot>=1e4],['🚀','30.000 km no total',tot>=3e4],['📅','Mês de 500 km',best>=500],['📅','Mês de 1.000 km',best>=1e3],['🛣️','Pedalada de 100 km',longest>=100],['🛣️','Pedalada de 200 km',longest>=200],['⛰️','Subida de 1.000 m',climb>=1e3],['⛰️','Subida de 3.000 m',climb>=3e3],['🔥','Sequência de 52 semanas',+$('streakN').textContent>=52],['🔥','Sequência de 100 semanas',+$('streakN').textContent>=100]];
+  return `<h1>Desafios</h1>
+  <div class="box"><h3>Meta do mês</h3><div class="goal">Meta: <input id="gm" type="number" value="${mg}"> km</div><div class="prog"><i style="width:${Math.min(100,km/mg*100)}%"></i></div><b>${fmt(km)} km</b> de ${fmt(mg)} km (${fmt(km/mg*100)}%)</div>
+  <div class="box"><h3>Meta do ano</h3><div class="goal">Meta: <input id="gy" type="number" value="${yg}"> km</div><div class="prog"><i style="width:${Math.min(100,ky/yg*100)}%"></i></div><b>${fmt(ky)} km</b> de ${fmt(yg)} km (${fmt(ky/yg*100)}%)</div>
+  <div class="box"><h3>Conquistas</h3><div class="badges">${B.map(([i,t,on])=>`<div class="badge ${on?'':'off'}"><b>${i}</b>${t}<small>${on?'Conquistado':'Bloqueado'}</small></div>`).join('')}</div></div>`;
+}
+function setGoal(){const s=(k,id)=>{const e=$(id);if(e)e.onchange=()=>{try{localStorage.setItem(k,e.value)}catch(x){}go()}};s('goalM','gm');s('goalY','gy')}
+function go(){
+  const v=(location.hash||'#painel').slice(1);
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+  $('view-painel').style.display=v==='painel'||!{treinamento:1,mapas:1,desafios:1}[v]?'grid':'none';
+  const o=$('view2');
+  if(v==='treinamento'||v==='mapas'||v==='desafios'){o.style.display='block';o.innerHTML={treinamento:viewTreino,mapas:viewMapas,desafios:viewDesafios}[v]();setGoal()}
+  else o.style.display='none';
+}
+addEventListener('hashchange',go);
 if(!ALL.length)$('feed').innerHTML='<div class="box empty">Sem dados. Rode <code>py sync_strava.py</code>.</div>';
-else{profile();render()}
+else{profile();render();go()}
 </script>
 </body>
 </html>
