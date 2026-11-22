@@ -3,82 +3,196 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meu Strava</title>
+<title>Painel de Atividades</title>
 <style>
-  :root{--bg:#0e1013;--card:#171b21;--fg:#f2f4f7;--mut:#8b94a1;--acc:#fc4c02}
+  :root{--bg:#f7f7fa;--card:#fff;--fg:#242428;--mut:#6d6d78;--line:#dfdfe8;--acc:#fc4c02;--acc-d:#e34402}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,sans-serif;padding:32px 5vw;max-width:1200px;margin:auto}
-  h1{font-size:2rem;font-weight:900}h1 b{color:var(--acc)}
-  .bar{display:flex;gap:10px;margin:18px 0 28px;flex-wrap:wrap}
-  button{background:var(--card);color:var(--mut);border:1px solid #262d36;border-radius:99px;padding:8px 18px;cursor:pointer;font:inherit}
-  button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:28px}
-  .kpi,.card{background:var(--card);border-radius:16px;padding:20px}
-  .kpi strong{display:block;font-size:1.9rem;color:var(--acc)}
-  .kpi span{color:var(--mut);font-size:.8rem;text-transform:uppercase;letter-spacing:.08em}
-  .card{margin-bottom:20px}.card h2{font-size:1rem;margin-bottom:14px;color:var(--mut)}
-  svg{width:100%;height:auto;display:block}
-  table{width:100%;border-collapse:collapse;font-size:.9rem}
-  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #232a33}th{color:var(--mut);font-weight:600}
-  #msg{color:var(--mut);margin-bottom:16px}
+  body{background:var(--bg);color:var(--fg);font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;font-size:15px}
+  a{color:inherit;text-decoration:none}
+  header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  .hd{max-width:1240px;margin:auto;height:60px;display:flex;align-items:center;gap:28px;padding:0 20px}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:900;font-size:1.25rem;color:var(--acc);letter-spacing:.02em}
+  .brand svg{width:26px;height:26px}
+  .hd nav{display:flex;gap:26px;color:var(--fg);font-size:.95rem}
+  .hd nav a{padding:20px 0;border-bottom:3px solid transparent}
+  .hd nav a.on,.hd nav a:hover{border-color:var(--acc)}
+  .spacer{flex:1}
+  .btn-o{border:1px solid var(--line);border-radius:4px;padding:8px 14px;font-weight:600;background:#fff;cursor:pointer;font:inherit;font-weight:600}
+  .plus{width:34px;height:34px;border-radius:50%;border:2px solid var(--acc);color:var(--acc);display:grid;place-items:center;font-size:1.4rem;font-weight:300}
+  .layout{max-width:1240px;margin:24px auto;padding:0 20px;display:grid;grid-template-columns:300px minmax(0,1fr) 300px;gap:28px;align-items:start}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:6px;box-shadow:0 1px 2px #0000000a}
+  /* perfil */
+  .profile{text-align:center;overflow:hidden}
+  .avatar{width:76px;height:76px;margin:-0px auto 0;border-radius:18px;display:grid;place-items:center;font-size:2.2rem;color:#fff;background:linear-gradient(135deg,#fc4c02,#ffb020);margin-top:22px}
+  .profile h2{margin:14px 12px 4px;font-size:1.15rem}
+  .profile .sub{color:var(--mut);font-size:.85rem;margin-bottom:16px}
+  .counts{display:grid;grid-template-columns:repeat(3,1fr);padding:14px 0;border-top:1px solid var(--line)}
+  .counts div{border-right:1px solid var(--line)}.counts div:last-child{border:0}
+  .counts small{display:block;color:var(--mut);font-size:.78rem}
+  .counts b{font-size:1.45rem;font-weight:500}
+  .sect{padding:16px 20px;border-top:1px solid var(--line);text-align:left}
+  .sect small{display:block;color:var(--mut);font-size:.8rem;margin-bottom:2px}
+  .sect strong{font-size:1.05rem}
+  .streak{display:flex;align-items:center;gap:12px;margin-top:10px}
+  .flame{width:46px;text-align:center;color:var(--acc);font-weight:800;font-size:.95rem;line-height:1}
+  .flame span{display:block;font-size:.65rem;color:var(--fg);font-weight:600;margin-top:2px}
+  .days{display:flex;gap:7px;flex:1;justify-content:space-between}
+  .day{text-align:center;font-size:.7rem;color:var(--mut)}
+  .dot{width:26px;height:26px;border-radius:50%;margin-top:4px;background:#e6e6ee;display:grid;place-items:center;font-size:.8rem}
+  .dot.on{background:#242428;color:#fff}
+  .tabs{display:flex;border-top:1px solid var(--line)}
+  .tabs button{flex:1;padding:14px 0;border:0;background:none;border-bottom:3px solid transparent;cursor:pointer;font-size:1.2rem;filter:grayscale(1);opacity:.7}
+  .tabs button.on{border-color:var(--acc);filter:none;opacity:1}
+  /* feed */
+  .feedhd{display:flex;gap:12px;margin-bottom:16px;align-items:center}
+  select{border:1px solid #8d8d9a;border-radius:4px;padding:11px 12px;background:#fff;font:inherit;min-width:220px}
+  .act{margin-bottom:18px;padding:18px 20px}
+  .who{display:flex;gap:12px;align-items:center}
+  .who .av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#fc4c02,#ffb020);color:#fff;display:grid;place-items:center;font-weight:700}
+  .who .nm{font-weight:600}.who .meta{font-size:.82rem;color:var(--mut)}
+  .title{display:flex;align-items:center;gap:14px;margin:14px 0 8px}
+  .title .ic{font-size:1.5rem}
+  .title h3{font-size:1.55rem;font-weight:500}
+  .stats{display:flex;gap:30px;flex-wrap:wrap;margin:10px 0 16px}
+  .stats small{display:block;color:var(--mut);font-size:.8rem}
+  .stats b{font-size:1.5rem;font-weight:400}
+  .map{border-radius:4px;overflow:hidden;background:#e9edf0;height:230px;position:relative}
+  .map svg{width:100%;height:100%;display:block}
+  .nomap{height:110px;display:flex;align-items:flex-end;gap:3px;padding:12px;background:#fff3ec;border-radius:4px}
+  .nomap i{flex:1;background:var(--acc);border-radius:2px 2px 0 0;opacity:.85}
+  .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+  .acts span{border:1px solid var(--line);border-radius:4px;padding:6px 14px;background:#f1f1f6;color:var(--mut)}
+  .more{display:block;margin:6px auto 40px;padding:11px 26px;border:1px solid var(--acc);color:var(--acc);background:#fff;border-radius:4px;font-weight:600;cursor:pointer;font:inherit;font-weight:600}
+  .more:hover{background:var(--acc);color:#fff}
+  /* lateral */
+  .side h3{font-size:1.25rem;font-weight:500;margin-bottom:14px}
+  .side section{padding:0 0 22px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+  .side section:last-child{border:0}
+  .rec{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eeeef3;font-size:.92rem}
+  .rec span{color:var(--mut)}
+  .wk{display:flex;align-items:flex-end;gap:5px;height:110px;margin-top:6px}
+  .wk i{flex:1;background:var(--acc);border-radius:2px 2px 0 0;min-height:2px}
+  .wklbl{display:flex;justify-content:space-between;color:var(--mut);font-size:.72rem;margin-top:4px}
+  .empty{padding:40px;text-align:center;color:var(--mut)}
+  @media(max-width:1000px){.layout{grid-template-columns:1fr}.hd nav{display:none}}
 </style>
 </head>
 <body>
-<h1>Meu <b>Strava</b></h1>
-<div id="msg"></div>
-<div class="bar" id="filters"></div>
-<div class="kpis" id="kpis"></div>
-<div class="card"><h2>Distância por mês (km)</h2><div id="chartMonth"></div></div>
-<div class="card"><h2>Velocidade média por pedalada (km/h)</h2><div id="chartSpeed"></div></div>
-<div class="card"><h2>Últimas atividades</h2><table id="tbl"></table></div>
+<header><div class="hd">
+  <div class="brand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.4 17.9 12.9 13H9.5L15.4 24l5.9-11h-3.5zM10.5 0 3.7 13.2h4l2.8-5.4 2.7 5.4h4z"/></svg>PAINEL</div>
+  <nav><a class="on">Painel</a><a>Treinamento</a><a>Mapas</a><a>Desafios</a></nav>
+  <div class="spacer"></div>
+  <button class="btn-o" onclick="location.reload()">Atualizar</button>
+  <div class="plus">+</div>
+</div></header>
 
+<div class="layout">
+  <aside>
+    <div class="box profile">
+      <div class="avatar">🚴</div>
+      <h2>Minhas atividades</h2>
+      <div class="sub" id="since"></div>
+      <div class="counts" id="counts"></div>
+      <div class="sect"><small>Última atividade</small><strong id="last"></strong></div>
+      <div class="sect"><small>Sua sequência</small>
+        <div class="streak"><div class="flame"><span id="streakN" style="font-size:1.1rem;color:var(--acc);margin:0">0</span><span>Semanas</span></div><div class="days" id="days"></div></div>
+      </div>
+      <div class="tabs" id="tabs"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="feedhd"><select id="period"><option value="all">Todo o período</option><option value="365">Últimos 12 meses</option><option value="90">Últimos 90 dias</option><option value="30">Últimos 30 dias</option></select></div>
+    <div id="feed"></div>
+    <button class="more" id="more">Carregar mais</button>
+  </main>
+
+  <aside class="side">
+    <div class="box" style="padding:20px">
+      <section><h3 id="t1">Resumo</h3><div id="sum"></div></section>
+      <section><h3>Km por semana</h3><div class="wk" id="wk"></div><div class="wklbl"><span>12 sem. atrás</span><span>esta semana</span></div></section>
+      <section><h3>Recordes</h3><div id="rec"></div></section>
+    </div>
+  </aside>
+</div>
+
+<script src="data/activities.js"></script>
 <script>
-let ALL=[],type='Ride';
+const ALL=(window.ACTIVITIES||[]).slice().sort((a,b)=>b.start_date_local.localeCompare(a.start_date_local));
+const ICON={Ride:'🚴',VirtualRide:'🚴',GravelRide:'🚴',MountainBikeRide:'🚵',EBikeRide:'🚴',Run:'🏃',Walk:'🚶',Hike:'🥾',Swim:'🏊',Workout:'🏋️'};
+const NAME={Ride:'Pedalada',VirtualRide:'Pedalada virtual',Run:'Corrida',Walk:'Caminhada',Hike:'Trilha',Swim:'Natação'};
+const sp=a=>a.sport_type||a.type;
+const $=id=>document.getElementById(id);
 const fmt=(n,d=0)=>n.toLocaleString('pt-BR',{maximumFractionDigits:d,minimumFractionDigits:d});
-const hms=s=>Math.floor(s/3600)+'h'+String(Math.floor(s%3600/60)).padStart(2,'0');
+const hm=s=>{const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}h ${String(m).padStart(2,'0')}min`:`${m}min`};
+const dateBR=s=>new Date(s.slice(0,10)+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'});
+const today=new Date();
+let sport='all',period='all',shown=8;
 
-async function load(){
-  try{
-    ALL=await (await fetch('data/activities.json')).json();
-  }catch(e){
-    document.getElementById('msg').textContent='Sem dados ainda. Rode "py sync_strava.py" e abra via "py -m http.server 8000".';
-    return;
-  }
-  const types=[...new Set(ALL.map(a=>a.sport_type||a.type))];
-  if(!types.includes(type))type=types[0];
-  const f=document.getElementById('filters');
-  f.innerHTML='';
-  types.forEach(t=>{const b=document.createElement('button');b.textContent=t;b.className=t===type?'on':'';
-    b.onclick=()=>{type=t;load2()};f.appendChild(b)});
-  load2();
+function decode(str){let i=0,lat=0,lng=0,pts=[];while(i<str.length){for(const k of[0,1]){let r=0,s=0,b;do{b=str.charCodeAt(i++)-63;r|=(b&31)<<s;s+=5}while(b>=32);const v=(r&1)?~(r>>1):(r>>1);k?lng+=v:lat+=v}pts.push([lat/1e5,lng/1e5])}return pts}
+function mapSVG(poly){
+  const p=decode(poly);if(p.length<2)return'';
+  const la=p.map(x=>x[0]),lo=p.map(x=>x[1]);
+  const [a0,a1,o0,o1]=[Math.min(...la),Math.max(...la),Math.min(...lo),Math.max(...lo)];
+  const k=Math.cos((a0+a1)/2*Math.PI/180),W=800,H=230,pad=24;
+  const w=(o1-o0)*k||1e-6,h=(a1-a0)||1e-6,s=Math.min((W-2*pad)/w,(H-2*pad)/h);
+  const ox=(W-w*s)/2,oy=(H-h*s)/2;
+  const d=p.map(([y,x],i)=>(i?'L':'M')+((x-o0)*k*s+ox).toFixed(1)+' '+(H-((y-a0)*s+oy)).toFixed(1)).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><rect width="${W}" height="${H}" fill="#eef1ee"/><path d="${d}" fill="none" stroke="#fc4c02" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
-function load2(){
-  [...document.querySelectorAll('#filters button')].forEach(b=>b.className=b.textContent===type?'on':'');
-  const d=ALL.filter(a=>(a.sport_type||a.type)===type);
+function filtered(){
+  return ALL.filter(a=>(sport==='all'||sp(a)===sport)&&(period==='all'||(today-new Date(a.start_date_local.slice(0,10)))/864e5<=+period));
+}
+function card(a){
+  const t=sp(a),nm=a.name&&a.name!==t?a.name:(NAME[t]||t);
+  const poly=a.map&&a.map.summary_polyline;
+  const hasTime=a.start_date_local.slice(11,16)!=='00:00';
+  const v=a.moving_time?a.distance/a.moving_time*3.6:0;
+  return `<article class="box act">
+    <div class="who"><div class="av">${(ICON[t]||'•')}</div><div><div class="nm">${NAME[t]||t}</div><div class="meta">${dateBR(a.start_date_local)}${hasTime?' às '+a.start_date_local.slice(11,16):''}</div></div></div>
+    <div class="title"><span class="ic">${ICON[t]||'•'}</span><h3>${nm}</h3></div>
+    <div class="stats"><div><small>Distância</small><b>${fmt(a.distance/1000,2)} km</b></div><div><small>Elevação</small><b>${fmt(a.total_elevation_gain)} m</b></div><div><small>Tempo</small><b>${hm(a.moving_time)}</b></div><div><small>Vel. média</small><b>${fmt(v,1)} km/h</b></div></div>
+    ${poly?`<div class="map">${mapSVG(poly)}</div>`:''}
+    <div class="acts"><span>👍</span><span>💬</span></div>
+  </article>`;
+}
+function render(){
+  const d=filtered();
+  $('feed').innerHTML=d.length?d.slice(0,shown).map(card).join(''):'<div class="box empty">Nenhuma atividade neste filtro.</div>';
+  $('more').style.display=d.length>shown?'block':'none';
   const km=d.reduce((s,a)=>s+a.distance,0)/1000,t=d.reduce((s,a)=>s+a.moving_time,0),el=d.reduce((s,a)=>s+a.total_elevation_gain,0);
-  const best=d.reduce((m,a)=>Math.max(m,a.max_speed||0),0)*3.6;
-  document.getElementById('kpis').innerHTML=[
-    [fmt(d.length),'Atividades'],[fmt(km)+' km','Distância'],[hms(t),'Tempo em movimento'],
-    [fmt(el)+' m','Elevação'],[fmt(km/(t/3600||1),1)+' km/h','Vel. média'],[fmt(best,1)+' km/h','Vel. máxima']
-  ].map(([v,l])=>`<div class="kpi"><strong>${v}</strong><span>${l}</span></div>`).join('');
-  // meses
-  const m={};d.forEach(a=>{const k=a.start_date_local.slice(0,7);m[k]=(m[k]||0)+a.distance/1000});
-  const keys=Object.keys(m).sort().slice(-18);bars('chartMonth',keys.map(k=>[k.slice(2),m[k]]));
-  const last=d.slice(0,40).reverse();
-  bars('chartSpeed',last.map(a=>[a.start_date_local.slice(5,10),a.distance/a.moving_time*3.6]),1);
-  document.getElementById('tbl').innerHTML='<tr><th>Data</th><th>Nome</th><th>Km</th><th>Tempo</th><th>Vel.</th><th>Elev.</th></tr>'+
-    d.slice(0,15).map(a=>`<tr><td>${a.start_date_local.slice(0,10)}</td><td>${a.name}</td><td>${fmt(a.distance/1000,1)}</td><td>${hms(a.moving_time)}</td><td>${fmt(a.distance/a.moving_time*3.6,1)}</td><td>${fmt(a.total_elevation_gain)} m</td></tr>`).join('');
+  $('sum').innerHTML=[['Atividades',fmt(d.length)],['Distância',fmt(km)+' km'],['Tempo',fmt(t/3600)+' h'],['Elevação',fmt(el)+' m'],['Vel. média',fmt(km/(t/3600||1),1)+' km/h']].map(([a,b])=>`<div class="rec">${a}<span>${b}</span></div>`).join('');
+  const best=(f)=>d.reduce((m,a)=>!m||f(a)>f(m)?a:m,null);
+  const r1=best(a=>a.distance),r2=best(a=>a.total_elevation_gain),r3=best(a=>a.max_speed||0);
+  $('rec').innerHTML=d.length?[['Maior distância',fmt(r1.distance/1000,1)+' km',r1],['Maior ganho de elevação',fmt(r2.total_elevation_gain)+' m',r2],['Velocidade máxima',fmt((r3.max_speed||0)*3.6,1)+' km/h',r3]].map(([a,b,x])=>`<div class="rec">${a}<span>${b}<br><small>${x.start_date_local.slice(0,10).split('-').reverse().join('/')}</small></span></div>`).join(''):'';
+  // semanas
+  const mon=x=>{const t=new Date(x);t.setHours(12,0,0,0);t.setDate(t.getDate()-((t.getDay()+6)%7));return t.toISOString().slice(0,10)};
+  const wk={};d.forEach(a=>{const k=mon(a.start_date_local.slice(0,10)+'T12:00:00');wk[k]=(wk[k]||0)+a.distance/1000});
+  const keys=[];for(let i=11;i>=0;i--){const t=new Date(today);t.setDate(t.getDate()-7*i);keys.push(mon(t))}
+  const mx=Math.max(1,...keys.map(k=>wk[k]||0));
+  $('wk').innerHTML=keys.map(k=>`<i style="height:${(wk[k]||0)/mx*100}%" title="${k}: ${fmt(wk[k]||0)} km"></i>`).join('');
 }
-function bars(id,data,dec=0){
-  if(!data.length){document.getElementById(id).innerHTML='';return}
-  const W=900,H=240,p=28,max=Math.max(...data.map(d=>d[1]))||1,bw=(W-p*2)/data.length;
-  let s=`<svg viewBox="0 0 ${W} ${H}">`;
-  data.forEach(([l,v],i)=>{const h=(H-p*2)*v/max,x=p+i*bw;
-    s+=`<rect x="${x+3}" y="${H-p-h}" width="${bw-6}" height="${h}" rx="4" fill="#fc4c02"><title>${l}: ${fmt(v,1)}</title></rect>`;
-    if(data.length<=20)s+=`<text x="${x+bw/2}" y="${H-8}" fill="#8b94a1" font-size="11" text-anchor="middle">${l}</text>`});
-  document.getElementById(id).innerHTML=s+'</svg>';
+function profile(){
+  const dates=new Set(ALL.map(a=>a.start_date_local.slice(0,10)));
+  $('counts').innerHTML=`<div><small>Atividades</small><b>${fmt(ALL.length)}</b></div><div><small>Distância</small><b>${fmt(ALL.reduce((s,a)=>s+a.distance,0)/1000)}<small style="display:inline"> km</small></b></div><div><small>Dias ativos</small><b>${fmt(dates.size)}</b></div>`;
+  if(ALL.length){$('since').textContent='Desde '+dateBR(ALL[ALL.length-1].start_date_local);$('last').textContent=`${ALL[0].name&&ALL[0].name!==sp(ALL[0])?ALL[0].name:NAME[sp(ALL[0])]||sp(ALL[0])} • ${dateBR(ALL[0].start_date_local)}`}
+  // sequencia de semanas
+  const mon=x=>{const t=new Date(x+'T12:00:00');t.setDate(t.getDate()-((t.getDay()+6)%7));return t.toISOString().slice(0,10)};
+  const weeks=new Set([...dates].map(mon));let n=0,c=new Date(today);c.setHours(12);
+  if(!weeks.has(mon(c.toISOString().slice(0,10))))c.setDate(c.getDate()-7);
+  while(weeks.has(mon(c.toISOString().slice(0,10)))){n++;c.setDate(c.getDate()-7)}
+  $('streakN').textContent=n;
+  const start=new Date(today);start.setDate(start.getDate()-((start.getDay()+6)%7));
+  $('days').innerHTML=['S','T','Q','Q','S','S','D'].map((l,i)=>{const t=new Date(start);t.setDate(t.getDate()+i);const on=dates.has(t.toISOString().slice(0,10));return `<div class="day">${l}<div class="dot ${on?'on':''}">${on?'✓':''}</div></div>`}).join('');
+  // abas por esporte
+  const groups=[['all','▦'],['Ride','🚴'],['Run','🏃'],['Walk','🚶']].filter(([k])=>k==='all'||ALL.some(a=>sp(a)===k));
+  $('tabs').innerHTML=groups.map(([k,i])=>`<button data-k="${k}" class="${k===sport?'on':''}" title="${k==='all'?'Todos':NAME[k]}">${i}</button>`).join('');
+  $('tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;sport=b.dataset.k;shown=8;profile();render()};
 }
-load();
+$('more').onclick=()=>{shown+=8;render()};
+$('period').onchange=e=>{period=e.target.value;shown=8;render()};
+if(!ALL.length)$('feed').innerHTML='<div class="box empty">Sem dados. Rode <code>py sync_strava.py</code>.</div>';
+else{profile();render()}
 </script>
 </body>
 </html>
